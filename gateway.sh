@@ -28,8 +28,10 @@ bash ../sources/rebuild.sh" > scripts/portfolio
 
 chmod +x scripts/portfolio
 
-export GOPATH=$HOME/go
-export PATH=$PATH:$GOROOT/bin:$GOPATH/bin
+export GOPATH=$HOME/govagrant/
+
+exportvagrant/
+PATH=$PATH:$GOROOT/bin:$GOPATH/bin
 
 go get github.com/gorilla/mux
 go build
