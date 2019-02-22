@@ -46,17 +46,14 @@ func main() {
 	router.HandleFunc("/", LoadService).Methods("POST")
 	http.Handle("/", router)
 	log.Fatal(http.ListenAndServe(":8000", nil))
-
-	fmt.Println("started")
 }
 
 func LoadService(w http.ResponseWriter, req *http.Request) {
 	var hook Webhook
 	content, _ := ioutil.ReadAll(req.Body)
 	json.Unmarshal(content, &hook)
-	dockerCmd := exec.Command("docker", "run", "-d", "--name="+hook.Repository.Name, hook.Repository.Repo_name)
 
-	err := dockerCmd.Run()
+	err := UpdateContainer(hook.Repository)
 
 	if err != nil {
 		fmt.Print(err.Error())
@@ -67,4 +64,16 @@ func LoadService(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.Write([]byte("200 - Container started!"))
 	}
+}
+
+func UpdateContainer(repository Repository) error {
+	exec.Command("docker", "pull", repository.Repo_name).Run()
+	exec.Command("docker", "stop", repository.Name).Run()
+	exec.Command("docker", "rm", repository.Name).Run()
+	err := exec.Command("docker", "run", "-d", "--name="+repository.Name, repository.Repo_name).Run()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
