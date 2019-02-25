@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"os/exec"
+	"strings"
 )
 
 type Push_data struct {
@@ -41,6 +42,15 @@ type Repository struct {
 	Status           string
 }
 
+type Callback struct {
+	State       string
+	Description string
+	Context     string
+	Target_url  string
+}
+
+const owner = "notarock"
+
 func main() {
 	router := mux.NewRouter()
 	router.HandleFunc("/", LoadService).Methods("POST")
@@ -50,20 +60,28 @@ func main() {
 
 func LoadService(w http.ResponseWriter, req *http.Request) {
 	var hook Webhook
+
+	var responseData Callback
+	responseData.Context = "Gopdater répond"
+	responseData.Description = "Yup "
+	responseData.State = "error"
+	responseData.Target_url = "https://testingtaskdjasd.domainename.com"
+
 	content, _ := ioutil.ReadAll(req.Body)
 	json.Unmarshal(content, &hook)
 
-	err := UpdateContainer(hook.Repository)
-
-	if err != nil {
-		fmt.Print(err.Error())
-		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte("500 - Something bad happened!"))
-	} else {
-		w.WriteHeader(http.StatusOK)
-		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte("200 - Container started!"))
+	if IsValidRequest(hook) {
+		err := UpdateContainer(hook.Repository)
+		if err != nil {
+			fmt.Print(err.Error())
+		} else {
+			responseData.State = "success"
+		}
 	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(responseData)
 }
 
 func UpdateContainer(repository Repository) error {
@@ -76,4 +94,8 @@ func UpdateContainer(repository Repository) error {
 	}
 
 	return nil
+}
+
+func IsValidRequest(hook Webhook) bool {
+	return hook.Repository.Owner == owner && strings.Contains(hook.Repository.Repo_name, owner)
 }
