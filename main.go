@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
+	//	"fmt"
 	"github.com/gorilla/mux"
 	"io/ioutil"
 	"log"
@@ -11,35 +11,31 @@ import (
 	"strings"
 )
 
-type Push_data struct {
-	Images    []string
-	Pushed_at string
-	Pusher    string
-	Tag       string
-}
-
 type Webhook struct {
-	Callback_url string
-	Push_data    Push_data
-	Repository   Repository
-}
-
-type Repository struct {
-	Comment_count    string
-	Date_created     string
-	description      string
-	Dockerfile       string
-	Full_description string
-	Is_official      string
-	Is_private       string
-	Is_trusted       string
-	Name             string
-	Namespace        string
-	Owner            string
-	Repo_name        string
-	Repo_url         string
-	Star_count       string
-	Status           string
+	CallbackURL string `json:"callback_url"`
+	PushData    struct {
+		Images   []string `json:"images"`
+		PushedAt int      `json:"pushed_at"`
+		Pusher   string   `json:"pusher"`
+		Tag      string   `json:"tag"`
+	} `json:"push_data"`
+	Repository struct {
+		CommentCount    int    `json:"comment_count"`
+		DateCreated     int    `json:"date_created"`
+		Description     string `json:"description"`
+		Dockerfile      string `json:"dockerfile"`
+		FullDescription string `json:"full_description"`
+		IsOfficial      bool   `json:"is_official"`
+		IsPrivate       bool   `json:"is_private"`
+		IsTrusted       bool   `json:"is_trusted"`
+		Name            string `json:"name"`
+		Namespace       string `json:"namespace"`
+		Owner           string `json:"owner"`
+		RepoName        string `json:"repo_name"`
+		RepoURL         string `json:"repo_url"`
+		StarCount       int    `json:"star_count"`
+		Status          string `json:"status"`
+	} `json:"repository"`
 }
 
 type Callback struct {
@@ -62,21 +58,27 @@ func LoadService(w http.ResponseWriter, req *http.Request) {
 	var hook Webhook
 
 	var responseData Callback
+
 	responseData.Context = "Gopdater répond"
 	responseData.Description = "Yup "
 	responseData.State = "error"
 	responseData.Target_url = "https://testingtaskdjasd.domainename.com"
 
 	content, _ := ioutil.ReadAll(req.Body)
+
+	responseData.State = string(content)
+
 	json.Unmarshal(content, &hook)
 
 	if IsValidRequest(hook) {
-		err := UpdateContainer(hook.Repository)
+		err := UpdateContainer(hook)
 		if err != nil {
-			fmt.Print(err.Error())
+			responseData.State = err.Error() + ""
 		} else {
 			responseData.State = "success"
 		}
+	} else {
+
 	}
 
 	w.WriteHeader(http.StatusOK)
@@ -84,11 +86,12 @@ func LoadService(w http.ResponseWriter, req *http.Request) {
 	json.NewEncoder(w).Encode(responseData)
 }
 
-func UpdateContainer(repository Repository) error {
-	exec.Command("docker", "pull", repository.Repo_name).Run()
-	exec.Command("docker", "stop", repository.Name).Run()
-	exec.Command("docker", "rm", repository.Name).Run()
-	err := exec.Command("docker", "run", "-d", "--name="+repository.Name, repository.Repo_name).Run()
+func UpdateContainer(hook Webhook) error {
+	err := exec.Command("docker", "pull", hook.Repository.RepoName).Run()
+	if err != nil {
+		return err
+	}
+	err = exec.Command("docker-compose", "restart", hook.Repository.Name).Run()
 	if err != nil {
 		return err
 	}
@@ -97,5 +100,5 @@ func UpdateContainer(repository Repository) error {
 }
 
 func IsValidRequest(hook Webhook) bool {
-	return hook.Repository.Owner == owner && strings.Contains(hook.Repository.Repo_name, owner)
+	return hook.Repository.Owner == owner && strings.Contains(hook.Repository.RepoName, owner)
 }

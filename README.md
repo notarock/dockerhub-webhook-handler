@@ -61,18 +61,46 @@ Voici un exemple de JSON envoyé par DockerHub lorsqu'un build fonctionne:
 
 ## Utilisation
 
-Très simple pour le momment:
+Premièrement, il faut configurer le fichier `docker-compose.yml` avec les services que nous voulons maintenir sur la machine.
 
-    go build
-    ./gopdater
+Ensuite, on peut lancer le programme simplement avec Docker:
 
+```
+docker build . -t gopdater
+docker run -v /var/run/docker.sock:/var/run/docker.sock --network=host -d gopdater
+```
 
-Une fois que le programme roulle, il peut recevoir une requête HTTP de type *POST* contenant:
+Ensuite, vous pouvez utiliser cette commande pour tester.
 
-    {
-    "service": "nom-de-service"
+    curl -X POST -H 'Content-Type: application/json' -i http://localhost:8000/ --data '    {
+      "callback_url": "https://registry.hub.docker.com/u/svendowideit/testhook/hook/2141b5bi5i5b02bec211i4eeih0242eg11000a/",
+      "push_data": {
+        "images": [
+            "27d47432a69bca5f2700e4dff7de0388ed65f9d3fb1ec645e2bc24c223dc1cc3",
+            "51a9c7c1f8bb2fa19bcd09789a34e63f35abb80044bc10196e304f6634cc582c",
+            "..."
+        ],
+        "pushed_at": 1.417566161e+09,
+        "pusher": "trustedbuilder",
+        "tag": "latest"
+      },
+      "repository": {
+        "comment_count": 0,
+        "date_created": 1.417494799e+09,
+        "description": "",
+        "dockerfile": "#\n# BUILD\u0009\u0009docker build -t svendowideit/apt-cacher .\n# RUN\u0009\u0009docker run -d -p 3142:3142 -name apt-cacher-run apt-cacher\n#\n# and then you can run containers with:\n# \u0009\u0009docker run -t -i -rm -e http_proxy http://192.168.1.2:3142/ debian bash\n#\nFROM\u0009\u0009ubuntu\n\n\nVOLUME\u0009\u0009[/var/cache/apt-cacher-ng]\nRUN\u0009\u0009apt-get update ; apt-get install -yq apt-cacher-ng\n\nEXPOSE \u0009\u00093142\nCMD\u0009\u0009chmod 777 /var/cache/apt-cacher-ng ; /etc/init.d/apt-cacher-ng start ; tail -f /var/log/apt-cacher-ng/*\n",
+        "full_description": "Docker Hub based automated build from a GitHub repo",
+        "is_official": false,
+        "is_private": true,
+        "is_trusted": true,
+        "name": "portfolio-ng",
+        "namespace": "svendowideit",
+        "owner": "notarock",
+        "repo_name": "notarock/portfolio-ng",
+        "repo_url": "https://registry.hub.docker.com/u/svendowideit/testhook/",
+        "star_count": 0,
+        "status": "Active"
+      }
     }
-
-Pour le moment, le programme tente de rouller le script `nom-de-service` qui se trouve dans son dossier
- scripts.
- 
+    
+    
