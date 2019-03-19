@@ -87,11 +87,19 @@ func LoadService(w http.ResponseWriter, req *http.Request) {
 }
 
 func UpdateContainer(hook Webhook) error {
-	err := exec.Command("docker", "pull", hook.Repository.RepoName).Run()
+	err := exec.Command("docker", "stop", hook.Repository.Name).Run()
 	if err != nil {
 		return err
 	}
-	err = exec.Command("docker-compose", "restart", hook.Repository.Name).Run()
+	err = exec.Command("docker", "rm", hook.Repository.Name).Run()
+	if err != nil {
+		return err
+	}
+	err = exec.Command("docker-compose", "pull", hook.Repository.Name).Run()
+	if err != nil {
+		return err
+	}
+	err = exec.Command("docker-compose", "up", "-d", "--no-deps", "--build", hook.Repository.Name).Run()
 	if err != nil {
 		return err
 	}
