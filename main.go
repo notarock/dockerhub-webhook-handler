@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	//	"fmt"
+	"fmt"
 	"github.com/gorilla/mux"
 	"io/ioutil"
 	"log"
@@ -69,6 +69,7 @@ func LoadService(w http.ResponseWriter, req *http.Request) {
 	responseData.State = string(content)
 
 	json.Unmarshal(content, &hook)
+	fmt.Print(hook.Repository)
 
 	if IsValidRequest(hook) {
 		err := UpdateContainer(hook)
@@ -95,6 +96,7 @@ func UpdateContainer(hook Webhook) error {
 	if err != nil {
 		return err
 	}
+
 	err = exec.Command("docker-compose", "pull", hook.Repository.Name).Run()
 	if err != nil {
 		return err
