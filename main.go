@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os/exec"
 	"strings"
+	"os"
 )
 
 type Webhook struct {
@@ -45,7 +46,7 @@ type Callback struct {
 	Target_url  string
 }
 
-const owner = "notarock"
+var owner = os.Getenv("OWNER")
 
 func main() {
 	router := mux.NewRouter()
@@ -112,3 +113,4 @@ func UpdateContainer(hook Webhook) error {
 func IsValidRequest(hook Webhook) bool {
 	return hook.Repository.Owner == owner && strings.Contains(hook.Repository.RepoName, owner)
 }
+

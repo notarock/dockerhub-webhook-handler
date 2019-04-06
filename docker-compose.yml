@@ -1,9 +1,23 @@
 version: '2'
 
 services:
-  portfolio-ng:
-    image: notarock/portfolio-ng
+  blog:
+    image: notarock/blog
     container_name: blog
     ports:
       - 1313:1313
     restart: always
+
+  gopdater:
+    build:
+      context: .
+    container_name: gopdater
+    environment: 
+      - OWNER=__owner__
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./docker-compose.yml:/app/gopdater/docker-compose.yml
+    ports:
+      - 8080:8080
+    restart: always
+
