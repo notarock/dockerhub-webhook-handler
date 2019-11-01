@@ -1,4 +1,4 @@
-# gopdater
+# dockerhub-webhook-handler
 
 Il est important de préciser que ce projet est encore en phase "jouet". Il n'est pas fonctionnel, et il
 n'y a pas encore de fonctionnement préétabli. Pour le moment, il permet de faire rouler un script
